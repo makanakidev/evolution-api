@@ -17,7 +17,7 @@ COPY ./src ./src
 COPY ./public ./public
 COPY ./prisma ./prisma
 COPY ./manager ./manager
-COPY ./.env.example ./.env
+COPY ./.env ./.env
 COPY ./runWithProvider.js ./
 COPY ./tsup.config.ts ./
 
@@ -34,7 +34,7 @@ FROM node:20-alpine AS final
 RUN apk update && \
     apk add tzdata ffmpeg bash
 
-ENV TZ=America/Sao_Paulo
+ENV TZ=Africa/Lagos
 
 WORKDIR /evolution
 
