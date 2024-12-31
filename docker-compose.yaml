@@ -39,8 +39,8 @@ services:
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=nWVOHWwOsvcFSDRzmvRIcUVLfwpGHWKR
     volumes:
       - postgres_data:/var/lib/postgresql/data
     expose:
