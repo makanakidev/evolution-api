@@ -37,8 +37,8 @@ lerna-debug.log*
 /test/
 /src/env.yml
 /store
-.env
-.env.env
+*.env
+.update.sh
 
 /temp/*
 
@@ -47,5 +47,3 @@ lerna-debug.log*
 .tool-versions
 
 /prisma/migrations/*
-
-.update.sh
