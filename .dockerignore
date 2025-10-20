@@ -4,5 +4,4 @@
 .env
 node_modules
 dist
-/Docker/swarm/evolution_api_v2.yaml
-.env.example
+.env.env

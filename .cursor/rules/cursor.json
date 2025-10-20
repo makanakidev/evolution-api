@@ -53,6 +53,7 @@
         "*.min.css",
         ".env",
         ".env.*",
+        ".env.env",
         ".env.example",
         "coverage/**",
         "*.log",
