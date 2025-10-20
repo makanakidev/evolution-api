@@ -37,7 +37,9 @@ lerna-debug.log*
 /test/
 /src/env.yml
 /store
-*.env
+.env
+.env.example
+/Docker/swarm/*
 
 /temp/*
 
