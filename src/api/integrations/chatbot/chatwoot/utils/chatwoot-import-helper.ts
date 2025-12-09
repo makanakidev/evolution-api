@@ -137,7 +137,7 @@ class ChatwootImport {
                        DO UPDATE SET
                         name = EXCLUDED.name,
                         phone_number = EXCLUDED.phone_number,
-                        identifier = EXCLUDED.identifier`;
+                        updated_at = NOW()`;
 
         totalContactsImported += (await pgClient.query(sqlInsert, bindInsert))?.rowCount ?? 0;
 

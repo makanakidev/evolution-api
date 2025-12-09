@@ -516,7 +516,9 @@ export class BusinessStartupService extends ChannelStartupService {
                 const mediaUrl = await s3Service.getObjectUrl(fullName);
 
                 messageRaw.message.mediaUrl = mediaUrl;
-                messageRaw.message.base64 = buffer.data.toString('base64');
+                if (this.localWebhook.enabled && this.localWebhook.webhookBase64) {
+                  messageRaw.message.base64 = buffer.data.toString('base64');
+                }
 
                 // Processar OpenAI speech-to-text para áudio após o mediaUrl estar disponível
                 if (this.configService.get<Openai>('OPENAI').ENABLED && mediaType === 'audio') {
@@ -554,11 +556,19 @@ export class BusinessStartupService extends ChannelStartupService {
               this.logger.error(['Error on upload file to minio', error?.message, error?.stack]);
             }
           } else {
-            const buffer = await this.downloadMediaMessage(received?.messages[0]);
-            messageRaw.message.base64 = buffer.toString('base64');
+            if (this.localWebhook.enabled && this.localWebhook.webhookBase64) {
+              const buffer = await this.downloadMediaMessage(received?.messages[0]);
+              messageRaw.message.base64 = buffer.toString('base64');
+            }
 
             // Processar OpenAI speech-to-text para áudio mesmo sem S3
             if (this.configService.get<Openai>('OPENAI').ENABLED && message.type === 'audio') {
+              let openAiBase64 = messageRaw.message.base64;
+              if (!openAiBase64) {
+                const buffer = await this.downloadMediaMessage(received?.messages[0]);
+                openAiBase64 = buffer.toString('base64');
+              }
+
               const openAiDefaultSettings = await this.prismaRepository.openaiSetting.findFirst({
                 where: {
                   instanceId: this.instanceId,
@@ -574,7 +584,7 @@ export class BusinessStartupService extends ChannelStartupService {
                     openAiDefaultSettings.OpenaiCreds,
                     {
                       message: {
-                        base64: messageRaw.message.base64,
+                        base64: openAiBase64,
                         ...messageRaw,
                       },
                     },
@@ -1016,6 +1026,7 @@ export class BusinessStartupService extends ChannelStartupService {
             [message['mediaType']]: {
               [message['type']]: message['id'],
               ...(message['mediaType'] !== 'audio' &&
+                message['mediaType'] !== 'video' &&
                 message['fileName'] &&
                 !isImage && { filename: message['fileName'] }),
               ...(message['mediaType'] !== 'audio' && message['caption'] && { caption: message['caption'] }),
@@ -1606,9 +1617,14 @@ export class BusinessStartupService extends ChannelStartupService {
       const messageType = msg.messageType.includes('Message') ? msg.messageType : msg.messageType + 'Message';
       const mediaMessage = msg.message[messageType];
 
+      if (!msg.message?.base64) {
+        const buffer = await this.downloadMediaMessage({ type: messageType, ...msg.message });
+        msg.message.base64 = buffer.toString('base64');
+      }
+
       return {
         mediaType: msg.messageType,
-        fileName: mediaMessage?.fileName,
+        fileName: mediaMessage?.fileName || mediaMessage?.filename,
         caption: mediaMessage?.caption,
         size: {
           fileLength: mediaMessage?.fileLength,

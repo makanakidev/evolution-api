@@ -1,3 +1,182 @@
+# 2.3.7 (2025-12-05)
+
+### Features
+
+* **WhatsApp Business Meta Templates**: Add update and delete endpoints for Meta templates
+  - New endpoints to edit and delete WhatsApp Business templates
+  - Added DTOs and validation schemas for template management
+  - Enhanced template lifecycle management capabilities
+
+* **Events API**: Add isLatest and progress to messages.set event
+  - Allows consumers to know when history sync is complete (isLatest=true)
+  - Track sync progress percentage through webhooks
+  - Added extra field to EmitData type for additional payload properties
+  - Updated all event controllers (webhook, rabbitmq, sqs, websocket, pusher, kafka, nats)
+
+* **N8N Integration**: Add quotedMessage to payload in sendMessageToBot
+  - Support for quoted messages in N8N chatbot integration
+  - Enhanced message context information
+
+* **WebSocket**: Add wildcard "*" to allow all hosts to connect via websocket
+  - More flexible host configuration for WebSocket connections
+  - Improved host validation logic in WebsocketController
+
+* **Pix Support**: Handle interactive button message for pix
+  - Support for interactive Pix button messages
+  - Enhanced payment flow integration
+
+### Fixed
+
+* **Baileys Message Processor**: Fix incoming message events not working after reconnection
+  - Added cleanup logic in mount() to prevent memory leaks from multiple subscriptions
+  - Recreate messageSubject if it was completed during logout
+  - Remount messageProcessor in connectToWhatsapp() to ensure subscription is active
+  - Fixed issue where onDestroy() calls complete() on RxJS Subject, making it permanently closed
+  - Ensures old subscriptions are properly cleaned up before creating new ones
+
+* **Baileys Authentication**: Resolve "waiting for message" state after reconnection
+  - Fixed Redis keys not being properly removed during instance logout
+  - Prevented loading of old/invalid cryptographic keys on reconnection
+  - Fixed blocking state where instances authenticate but cannot send messages
+  - Ensures new credentials (creds) are properly used after reconnection
+
+* **OnWhatsapp Cache**: Prevent unique constraint errors and optimize database writes
+  - Fixed `Unique constraint failed on the fields: (remoteJid)` error when sending to groups
+  - Refactored query to use OR condition finding by jidOptions or remoteJid
+  - Added deep comparison to skip unnecessary database updates
+  - Replaced sequential processing with Promise.allSettled for parallel execution
+  - Sorted JIDs alphabetically in jidOptions for accurate change detection
+  - Added normalizeJid helper function for cleaner code
+
+* **Proxy Integration**: Fix "Media upload failed on all hosts" error when using proxy
+  - Created makeProxyAgentUndici() for Undici-compatible proxy agents
+  - Fixed compatibility with Node.js 18+ native fetch() implementation
+  - Replaced traditional HttpsProxyAgent/SocksProxyAgent with Undici ProxyAgent
+  - Maintained legacy makeProxyAgent() for Axios compatibility
+  - Fixed protocol handling in makeProxyAgent to prevent undefined errors
+
+* **WhatsApp Business API**: Fix base64, filename and caption handling
+  - Corrected base64 media conversion in Business API
+  - Fixed filename handling for document messages
+  - Improved caption processing for media messages
+  - Enhanced remoteJid validation and processing
+
+* **Chat Service**: Fix fetchChats and message panel errors
+  - Fixed cleanMessageData errors in Manager message panel
+  - Improved chat fetching reliability
+  - Enhanced message data sanitization
+
+* **Contact Filtering**: Apply where filters correctly in findContacts endpoint
+  - Fixed endpoint to process all where clause fields (id, remoteJid, pushName)
+  - Previously only processed remoteJid field, ignoring other filters
+  - Added remoteJid field to contactValidateSchema for proper validation
+  - Maintained multi-tenant isolation with instanceId filtering
+  - Allows filtering contacts by any supported field instead of returning all contacts
+
+* **Chatwoot and Baileys Integration**: Multiple integration improvements
+  - Enhanced code formatting and consistency
+  - Fixed integration issues between Chatwoot and Baileys services
+  - Improved message handling and delivery
+
+* **Baileys Message Loss**: Prevent message loss from WhatsApp stub placeholders
+  - Fixed messages being lost and not saved to database, especially for channels/newsletters (@lid)
+  - Detects WhatsApp stubs through messageStubParameters containing 'Message absent from node'
+  - Prevents adding stubs to duplicate message cache
+  - Allows real message to be processed when it arrives after decryption
+  - Maintains stub discard to avoid saving empty placeholders
+
+* **Database Contacts**: Respect DATABASE_SAVE_DATA_CONTACTS in contact updates
+  - Added missing conditional checks for DATABASE_SAVE_DATA_CONTACTS configuration
+  - Fixed profile picture updates attempting to save when database save is disabled
+  - Fixed unawaited promise in contacts.upsert handler
+
+* **Prisma/PostgreSQL**: Add unique constraint to Chat model
+  - Generated migration to add unique index on instanceId and remoteJid
+  - Added deduplication step before creating index to prevent constraint violations
+  - Prevents chat duplication in database
+
+* **MinIO Upload**: Handle messageContextInfo in media upload to prevent MinIO errors
+  - Prevents errors when uploading media with messageContextInfo metadata
+  - Improved error handling for media storage operations
+
+* **Typebot**: Fix message routing for @lid JIDs
+  - Typebot now responds to messages from JIDs ending with @lid
+  - Maintains complete JID for @lid instead of extracting only number
+  - Fixed condition: `remoteJid.includes('@lid') ? remoteJid : remoteJid.split('@')[0]`
+  - Handles both @s.whatsapp.net and @lid message formats
+
+* **Message Filtering**: Unify remoteJid filtering using OR with remoteJidAlt
+  - Improved message filtering with alternative JID support
+  - Better handling of messages with different JID formats
+
+* **@lid Integration**: Multiple fixes for @lid problems, message events and chatwoot errors
+  - Reorganized imports and improved message handling in BaileysStartupService
+  - Enhanced remoteJid processing to handle @lid cases
+  - Improved jid normalization and type safety in Chatwoot integration
+  - Streamlined message handling logic and cache management
+  - Refactored message handling and polling updates with decryption logic for poll votes
+  - Improved event processing flow for various message types
+
+* **Chatwoot Contacts**: Fix contact duplication error on import
+  - Resolved 'ON CONFLICT DO UPDATE command cannot affect row a second time' error
+  - Removed attempt to update identifier field in conflict (part of constraint)
+  - Changed to update only updated_at field: `updated_at = NOW()`
+  - Allows duplicate contacts to be updated correctly without errors
+
+* **Chatwoot Service**: Fix async handling in update_last_seen method
+  - Added missing await for chatwootRequest in read message processing
+  - Prevents service failure when processing read messages
+
+* **Metrics Access**: Fix IP validation including x-forwarded-for
+  - Uses all IPs including x-forwarded-for header when checking metrics access
+  - Improved security and access control for metrics endpoint
+
+### Dependencies
+
+* **Baileys**: Updated to version 7.0.0-rc.9
+  - Latest release candidate with multiple improvements and bug fixes
+
+* **AWS SDK**: Updated packages to version 3.936.0
+  - Enhanced functionality and compatibility
+  - Performance improvements
+
+### Code Quality & Refactoring
+
+* **Template Management**: Remove unused template edit/delete DTOs after refactoring
+* **Proxy Utilities**: Improve makeProxyAgent for Undici compatibility
+* **Code Formatting**: Enhance code formatting and consistency across services
+* **BaileysStartupService**: Fix indentation and remove unnecessary blank lines
+* **Event Controllers**: Guard extra spread and prevent core field override in all event controllers
+* **Import Organization**: Reorganize imports for better code structure and maintainability
+
+# 2.3.6 (2025-10-21)
+
+### Features
+
+* **Baileys, Chatwoot, OnWhatsapp Cache**: Multiple implementations and fixes
+  - Fixed cache for PN, LID and g.us numbers to send correct number
+  - Fixed audio and document sending via Chatwoot in Baileys channel
+  - Multiple fixes in Chatwoot integration
+  - Fixed ignored messages when receiving leads
+
+### Fixed
+
+* **Baileys**: Fix buffer storage in database
+  - Correctly save Uint8Array values to database
+* **Baileys**: Simplify logging of messageSent object
+  - Fixed "this.isZero not is function" error
+
+### Chore
+
+* **Version**: Bump version to 2.3.6 and update Baileys dependency to 7.0.0-rc.6
+* **Workflows**: Update checkout step to include submodules
+  - Added 'submodules: recursive' option to checkout step in multiple workflow files to ensure submodules are properly initialized during CI/CD processes
+* **Manager**: Update asset files and install process
+  - Updated subproject reference in evolution-manager-v2 to the latest commit
+  - Enhanced the manager_install.sh script to include npm install and build steps
+  - Replaced old JavaScript asset file with a new version for improved performance
+  - Added a new CSS file for consistent styling across the application
+
 # 2.3.5 (2025-10-15)
 
 ### Features
