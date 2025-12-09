@@ -9,6 +9,10 @@ updated_branch=latest
 
 echo "🔍 Current branch: $current_branch"
 
+# Copy .env file
+echo "♻️ Updating .env file..."
+cp ./.env ./.env-org
+
 # Step 1: Save (stash) any uncommitted work safely
 echo "💾 Stashing local changes..."
 git stash push -m "Auto-stash before syncing with remote" || true
@@ -21,9 +25,8 @@ git fetch origin
 echo "🔄 Rebasing $current_branch with origin/$updated_branch..."
 git pull --rebase origin "$updated_branch"
 
-# Step 4: Restore the .env.example file to the repository version
-echo "🧹 Resetting .env.example to committed version..."
-git checkout -- .env.env
+# Step 4: Restore the .gitignore file to the repository version
+echo "🧹 Resetting .gitignore to committed version..."
 git checkout -- .gitignore
 
 # Step 5: Reapply your stashed changes (if any)
@@ -36,7 +39,7 @@ git push -u origin "$current_branch"
 
 # Step 6: Update .env file
 echo "♻️ Updating .env file..."
-cp ./.env.env ./.env
+cp ./.env-org ./.env
 
 # Step 7: Generate prisma files and deploy migration
 echo "♻️ Generating Prisma client files..."
