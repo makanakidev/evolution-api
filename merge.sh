@@ -37,6 +37,7 @@ npm run db:generate
 npm run db:deploy
 
 echo "⬇️ Starting Evolution API..."
+npm install -f
 npm run build
 npm run start:prod
 
