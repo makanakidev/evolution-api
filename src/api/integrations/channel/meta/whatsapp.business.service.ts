@@ -896,7 +896,7 @@ export class BusinessStartupService extends ChannelStartupService {
   protected async eventHandler(content: any) {
     try {
       this.logger.log('Content - eventHandler:');
-      this.logger.log(JSON.stringify(content, null, 2));
+      this.logger.log(content);
 
       const database = this.configService.get<Database>('DATABASE');
       const settings = await this.findSettings();
@@ -927,7 +927,7 @@ export class BusinessStartupService extends ChannelStartupService {
         }
       } else if (content.statuses) {
         // Process status updates
-        this.messageHandle(content, database, settings);
+        // this.messageHandle(content, database, settings);
       } else {
         this.logger.warn('No messages or statuses found in the received content');
       }
