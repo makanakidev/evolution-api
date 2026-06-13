@@ -35,7 +35,7 @@ FROM node:24-alpine AS final
 RUN apk update && \
     apk add tzdata ffmpeg bash openssl
 
-ENV TZ=America/Sao_Paulo
+ENV TZ=Africa/Lagos
 ENV DOCKER_ENV=true
 
 WORKDIR /evolution
