@@ -19,7 +19,7 @@ COPY ./src ./src
 COPY ./public ./public
 COPY ./prisma ./prisma
 COPY ./manager ./manager
-COPY ./.env-org ./.env
+COPY ./.env.org ./.env
 COPY ./runWithProvider.js ./
 
 COPY ./Docker ./Docker
